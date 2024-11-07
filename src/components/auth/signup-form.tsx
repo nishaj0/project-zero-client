@@ -4,12 +4,13 @@ import { SignupFormSchema, type SignupFormType } from "@/lib/form-schemas";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { useState } from "react";
-import { set } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { set } from "zod";
 
 const initialValues = {
 	firstName: "",
@@ -26,6 +27,8 @@ export function SignupForm() {
 	const [error, setError] = useState<{ terms?: string; submit?: string }>({});
 	const [loading, setLoading] = useState(false);
 
+	const router = useRouter();
+
 	const form = useForm<SignupFormType>({
 		resolver: zodResolver(SignupFormSchema),
 		defaultValues: initialValues,
@@ -41,11 +44,15 @@ export function SignupForm() {
 		}
 		// Signup api call
 		console.log(values);
-		setLoading(false);
+		setTimeout(() => {
+			setError({ submit: "Network Error" });
+			setLoading(false);
+		}, 1000);
+		// router.push("/signin ");
 	}
 
 	return (
-		<div className="sm:h-screen flex justify-center items-center">
+		<div className="min-h-screen py-4 sm:my-0 flex justify-center items-center">
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="max-w-5xl w-full mx-4 rounded-md shadow-md border p-4">
 					<h2 className="text-2xl font-semibold my-4 ">Create an account</h2>
@@ -154,15 +161,18 @@ export function SignupForm() {
 						</div>
 					</div>
 
-					<div className="grid sm:grid-cols-2 items-center gap-x-4">
-						<Button className="my-4" type="submit">
-							Create Account
+					<div className="grid sm:grid-cols-2">
+						{error.submit && <p className="text-center text-red-500">{error.submit}</p>}
+					</div>
+					<div className="grid sm:grid-cols-2 items-center gap-x-4 mt-4">
+						<Button disabled={loading} className="w-full" type="submit">
+							{loading ? "Loading..." : "Create account"}
 						</Button>
 						<p>
 							Already have an account?{" "}
 							<Link className="underline" href="/signin">
 								Login.
-							</Link>{" "}
+							</Link>
 						</p>
 					</div>
 				</form>
