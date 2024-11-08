@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { set } from "zod";
+import { signup } from "@/actions/authentication";
 
 const initialValues = {
 	firstName: "",
@@ -19,7 +18,6 @@ const initialValues = {
 	email: "",
 	password: "",
 	confirmPassword: "",
-	terms: false,
 };
 
 export function SignupForm() {
@@ -27,14 +25,12 @@ export function SignupForm() {
 	const [error, setError] = useState<{ terms?: string; submit?: string }>({});
 	const [loading, setLoading] = useState(false);
 
-	const router = useRouter();
-
 	const form = useForm<SignupFormType>({
 		resolver: zodResolver(SignupFormSchema),
 		defaultValues: initialValues,
 	});
 
-	function onSubmit(values: SignupFormType) {
+	const onSubmit = async (values: SignupFormType) => {
 		setError({});
 		setLoading(true);
 		if (!checked) {
@@ -42,21 +38,25 @@ export function SignupForm() {
 			setLoading(false);
 			return;
 		}
-		// Signup api call
-		console.log(values);
-		setTimeout(() => {
-			setError({ submit: "Network Error" });
-			setLoading(false);
-		}, 1000);
-		// router.push("/signin ");
-	}
+		const { error } = await signup(values);
+
+		if (error?.field) {
+			form.control.setError(error.field, { message: error.message });
+		} else if (error) {
+			setError({ submit: error.message });
+		}
+		setLoading(false);
+	};
 
 	return (
 		<div className="min-h-screen py-4 sm:my-0 flex justify-center items-center">
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className="max-w-5xl w-full mx-4 rounded-md shadow-md border p-4">
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="max-w-5xl w-full mx-4 rounded-md shadow-md border py-4 px-10"
+				>
 					<h2 className="text-2xl font-semibold my-4 ">Create an account</h2>
-					<div className="grid sm:grid-cols-2 gap-x-4 gap-y-8 mb-4">
+					<div className="grid sm:grid-cols-2 gap-x-20 gap-y-4 mb-4">
 						<FormField
 							control={form.control}
 							name="firstName"
@@ -164,17 +164,25 @@ export function SignupForm() {
 					<div className="grid sm:grid-cols-2">
 						{error.submit && <p className="text-center text-red-500">{error.submit}</p>}
 					</div>
-					<div className="grid sm:grid-cols-2 items-center gap-x-4 mt-4">
+					<div className="flex flex-col sm:flex-row items-center gap-y-2 my-4 ">
 						<Button disabled={loading} className="w-full" type="submit">
 							{loading ? "Loading..." : "Create account"}
 						</Button>
-						<p>
-							Already have an account?{" "}
-							<Link className="underline" href="/signin">
-								Login.
-							</Link>
-						</p>
+						<div className="flex items-center">
+							<div className="sm:hidden block h-[1px] bg-neutral-300 w-full" />
+							<p className="col-span-2 sm:w-20 sm:mx-0 mx-4 text-neutral-300 text-center text-lg">OR</p>
+							<div className="sm:hidden block h-[1px] bg-neutral-300 w-full" />
+						</div>
+						<Button variant="outline" className="w-full" type="button">
+							Continue with Google
+						</Button>
 					</div>
+					<p>
+						Already have an account?{" "}
+						<Link className="underline" href="/signin">
+							Login.
+						</Link>
+					</p>
 				</form>
 			</Form>
 		</div>
