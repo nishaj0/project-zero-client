@@ -27,8 +27,9 @@ export default function SigninForm() {
 		setError(null);
 		setLoading(true);
 
-		const { error } = await login(values);
-		if (error?.field) {
+		const error = await login(values);
+
+		if (error?.field === "email" || error?.field === "password") {
 			form.control.setError(error.field, { message: error.message }); // set error messages on their respective fields
 		} else if (error) {
 			setError(error.message);

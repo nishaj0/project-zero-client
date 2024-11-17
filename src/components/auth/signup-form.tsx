@@ -38,12 +38,15 @@ export function SignupForm() {
 			setLoading(false);
 			return;
 		}
-		const { error } = await signup(values);
+		const signupError = await signup(values);
 
-		if (error?.field) {
-			form.control.setError(error.field, { message: error.message });
-		} else if (error) {
-			setError({ submit: error.message });
+		if (signupError) {
+			const field = signupError?.field;
+			if (field === "email" || field === "username") {
+				form.control.setError(field, { message: signupError.message });
+			} else {
+				setError({ submit: signupError.message });
+			}
 		}
 		setLoading(false);
 	};
@@ -161,9 +164,7 @@ export function SignupForm() {
 						</div>
 					</div>
 
-					<div className="grid sm:grid-cols-2">
-						{error.submit && <p className="text-center text-red-500">{error.submit}</p>}
-					</div>
+					<div>{error.submit && <p className="text-sm text-red-500">{error.submit}</p>}</div>
 					<div className="flex flex-col sm:flex-row items-center gap-y-2 my-4 ">
 						<Button disabled={loading} className="w-full" type="submit">
 							{loading ? "Loading..." : "Create account"}
